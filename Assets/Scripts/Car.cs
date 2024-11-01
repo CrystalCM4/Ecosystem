@@ -7,6 +7,7 @@ public class Car : MonoBehaviour
     public enum CarState{
         Normal,
         Stop,
+        Spin,
         Explode
     }
 
@@ -25,11 +26,25 @@ public class Car : MonoBehaviour
         switch(newState){
             case CarState.Normal: 
 
+                if (randomDir == 1){
+                    transform.eulerAngles = new Vector3(0,0,-90);  
+                }
+                else {
+                    transform.eulerAngles = new Vector3(0,0,90);  
+                }
+
                 break;
 
             case CarState.Stop: 
-                
+                honk.Play();
                 timer = 2;
+                break;
+
+            case CarState.Spin:
+                if (!slip.isPlaying)
+                {
+                    slip.Play();
+                }
                 break;
 
             case CarState.Explode: 
@@ -81,6 +96,13 @@ public class Car : MonoBehaviour
                 StartCoroutine(Countdown(2));
                 break;
 
+            case CarState.Spin: 
+                speed = baseSpeed / 3;
+                transform.eulerAngles = new Vector3(0,0,angle);
+                angle += 90 + 1000 * Time.deltaTime;  
+                StartCoroutine(Countdown(2));
+                break;
+
             case CarState.Explode: 
                 Destroy(gameObject);
                 break;
@@ -94,7 +116,11 @@ public class Car : MonoBehaviour
 
                 break;
 
-            case CarState.Stop: 
+            case CarState.Stop:     
+
+                break;
+
+            case CarState.Spin: 
                 
                 break;
 
@@ -109,6 +135,9 @@ public class Car : MonoBehaviour
     public SpriteRenderer colorCheck;
     public GameObject explosion;
 
+    public AudioSource slip;
+    public AudioSource honk;
+
     public float yPos;
     public int randomDir;
     public float speed;
@@ -116,6 +145,7 @@ public class Car : MonoBehaviour
     public int randomSprite;
     public int randomSpawn;
     public float timer = 0;
+    public float angle = -90;
 
     void Start(){
         baseSpeed = speed;
@@ -144,15 +174,6 @@ public class Car : MonoBehaviour
         
     }
 
-    public void Honk(){
-
-
-        timer -= Time.deltaTime;
-        if (timer <= 0){
-            StartState(CarState.Normal);
-        }
-    }
-
     private IEnumerator Countdown (int seconds) {
         int counter = seconds;
             while (counter > 0) {
@@ -164,11 +185,16 @@ public class Car : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collObj){
         if (collObj.gameObject.CompareTag("Steve")){
+            //print(gameObject.name + ": fuck");
             StartState(CarState.Stop);
         }
 
         else if (collObj.gameObject.CompareTag("Car")){
             StartState(CarState.Explode);
+        }
+
+        else if (collObj.gameObject.CompareTag("Horse")){
+            StartState(CarState.Spin);
         }
     }
 }
